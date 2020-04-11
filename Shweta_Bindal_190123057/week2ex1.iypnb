@@ -1,0 +1,90 @@
+import numpy as np
+from matplotlib import pyplot
+from mpl_toolkits.mplot3d import Axes3D
+
+data = np.loadtxt("https://raw.githubusercontent.com/IITGuwahati-AI/Learning-Content/master/Phase%203%20-%202020%20(Summer)/Week%202%20(Apr%205%20-%20Apr%2011)/Exercise1/Data/ex1data1.txt", delimiter=',')
+x, y = data[:, 0], data[:, 1]
+pyplot.plot(x, y, 'ro', ms=10, mec='k')
+pyplot.ylabel('Profit in $10,000')
+pyplot.xlabel('Population of City in 10,000s')
+pyplot.show()
+z = np.stack([np.ones(97), x], axis=1)
+def computeCost(z,y,theta):
+    l=np.dot(z,theta)
+    k=l-y
+    p=np.dot(k,k)
+    
+    j=p/194
+    return j
+def gradientdecent(x,y,z,theta,alpha,iteration):
+   
+    theta_history=np.zeros((iteration,2))
+    
+    j_history = np.zeros((iteration))
+    for i in range(iteration):
+         l=np.dot(z,theta)
+         k=l-y
+         m=np.dot(k,x)/97
+         n=np.dot(k,np.ones(97))/97
+         theta[1]=theta[1]-(m*alpha)
+         theta[0]=theta[0]-(n*alpha)
+         j_history[i]=computeCost(z, y, theta)
+         theta_history[i,:]=theta.T
+        
+        
+        
+    return theta, j_history,theta_history
+        
+theta = np.zeros(2)
+
+# some gradient descent settings
+iterations = 1500
+alpha = 0.01
+
+theta,j_history,theta_history = gradientdecent(x,y,z,theta,alpha,iterations)
+
+i=0
+while j_history[i]!=np.min(j_history):
+      i=i+1
+beta=theta_history[i]
+print(beta)
+pyplot.plot(x, y, 'ro', ms=10, mec='k')
+pyplot.plot(z[:,1],np.dot(z,beta))
+pyplot.ylabel('Profit in $10,000')
+pyplot.xlabel('Population of City in 10,000s')
+pyplot.legend(['Training data', 'Linear regression']);
+
+predict1 = np.dot([1, 3.5], beta)
+print('For population = 35,000, we predict a profit of {:.2f}\n'.format(predict1*10000))
+
+predict2 = np.dot([1, 7], beta)
+print('For population = 70,000, we predict a profit of {:.2f}\n'.format(predict2*10000))
+theta0_vals = np.linspace(-10, 10, 100)
+theta1_vals = np.linspace(-1, 4, 100)
+
+# initialize J_vals to a matrix of 0's
+J_vals = np.zeros((theta0_vals.shape[0], theta1_vals.shape[0]))
+
+# Fill out J_vals
+for i, theta0 in enumerate(theta0_vals):
+    for j, theta1 in enumerate(theta1_vals):
+        J_vals[i, j] = computeCost(z, y, [theta0, theta1])
+        
+# Because of the way meshgrids work in the surf command, we need to
+# transpose J_vals before calling surf, or else the axes will be flipped
+J_vals = J_vals.T
+
+# surface plot
+fig = pyplot.figure(figsize=(12, 5))
+ax = fig.add_subplot(121, projection='3d')
+ax.plot_surface(theta0_vals, theta1_vals, J_vals, cmap='viridis')
+pyplot.xlabel('theta0')
+pyplot.ylabel('theta1')
+pyplot.title('Surface')
+ax = pyplot.subplot(122)
+pyplot.contour(theta0_vals, theta1_vals, J_vals, linewidths=2, cmap='viridis', levels=np.logspace(-2, 3, 20))
+pyplot.xlabel('theta0')
+pyplot.ylabel('theta1')
+pyplot.plot(theta[0], theta[1], 'ro', ms=10, lw=2)
+pyplot.title('Contour, showing minimum')
+    
