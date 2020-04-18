@@ -1,0 +1,152 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 13 19:43:49 2020
+
+@author: Shweta Bindal
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import optimize
+
+
+data = np.loadtxt("https://raw.githubusercontent.com/IITGuwahati-AI/Learning-Content/master/Phase%203%20-%202020%20(Summer)/Week%203(Apr%2013%20-%20Apr%2018)/Exercise2/Data/ex2data1.txt", delimiter=',')
+x, y = data[:, 0:2], data[:, 2]
+pos = y == 1
+neg = y == 0
+
+
+plt.plot(x[pos, 0], x[pos, 1], 'k*', lw=2, ms=10)
+plt.plot(x[neg, 0], x[neg, 1], 'ko', mfc='y', ms=8, mec='k', mew=1)
+plt.xlabel('Exam 1 score')
+plt.ylabel('Exam 2 score')
+plt.legend(['Admitted', 'Not admitted'])
+def sigmoid(z):
+   
+    return 1/(1+np.exp(-z))
+m, n = x.shape
+
+
+z = np.concatenate([np.ones((m, 1)), x], axis=1)
+def computeCost(theta,y,z):
+    l=np.dot(z,theta)
+    k=0
+    for i in range(y.size):
+        k=k+(-y[i]*np.log(sigmoid(l)[i])-(1-y[i])*np.log(1-sigmoid(l)[i]))
+    j=k/100
+    
+    
+    k=sigmoid(l)-y
+    p=np.dot(k,z[:,0])
+    q=np.dot(k,z[:,1])
+    r=np.dot(k,z[:,2])
+   
+    grad=np.array([p/100,q/100,r/100])
+
+    return j,grad
+initial_theta = np.zeros(3)
+
+cost,grad= computeCost(initial_theta,y,z)
+
+print('Cost at initial theta (zeros): {:.3f}'.format(cost))
+print('Expected cost (approx): 0.693\n')
+
+print('Gradient at initial theta (zeros):')
+print('\t[{:.4f}, {:.4f}, {:.4f}]'.format(*grad))
+print('Expected gradients (approx):\n\t[-0.1000, -12.0092, -11.2628]\n')
+
+# Compute and display cost and gradient with non-zero theta
+test_theta = np.array([-24, 0.2, 0.2])
+cost, grad = computeCost( test_theta,y,z)
+
+print('Cost at test theta: {:.3f}'.format(cost))
+print('Expected cost (approx): 0.218\n')
+
+print('Gradient at test theta:')
+print('\t[{:.3f}, {:.3f}, {:.3f}]'.format(*grad))
+print('Expected gradients (approx):\n\t[0.043, 2.566, 2.647]')
+
+
+
+
+options= {'maxiter': 400}
+
+
+res = optimize.minimize(computeCost,
+                        initial_theta,
+                        (y,z),
+                        jac=True,
+                        method='TNC',
+                        options=options)
+
+
+cost = res.fun
+
+
+theta = res.x
+
+
+print('Cost at theta found by optimize.minimize: {:.3f}'.format(cost))
+print('Expected cost (approx): 0.203\n');
+
+print('theta:')
+print('\t[{:.3f}, {:.3f}, {:.3f}]'.format(*theta))
+print('Expected theta (approx):\n\t[-25.161, 0.206, 0.201]')
+
+def map_feature(x1, x2):
+   
+    x1.shape = (x1.size, 1)
+    x2.shape = (x2.size, 1)
+    degree = 1
+    out = np.ones(shape=(x1[:, 0].size, 1))
+
+    m, n = out.shape
+
+    for i in range(1, degree + 1):
+        for j in range(i + 1):
+            r = (x1 ** (i - j)) * (x2 ** j)
+            out = np.append(out,r, axis=1)
+
+    return out
+
+def plotDecisionBoundary(theta, axes):
+    u = np.linspace(30,100,100)
+    v = np.linspace(30,100,100)
+    U,V = np.meshgrid(u,v)
+   
+    U = np.ravel(U)
+    V = np.ravel(V)
+    Z = np.zeros((len(u) * len(v)))
+    
+    
+    X_poly =  map_feature(U,V)
+    Z = X_poly.dot(theta)
+    
+   
+    U = U.reshape((len(u), len(v)))
+    V = V.reshape((len(u), len(v)))
+    Z = Z.reshape((len(u), len(v)))
+    
+    cs = axes.contour(U,V,Z,levels=[0],cmap= "Greys_r")
+    axes.legend(labels=['Admitted', 'Not admitted', 'Decision Boundary'])
+    return cs
+
+
+fig, axes = plt.subplots();
+
+plt.plot(x[pos, 0], x[pos, 1], 'k*', lw=2, ms=10)
+plt.plot(x[neg, 0], x[neg, 1], 'ko', mfc='y', ms=8, mec='k', mew=1)
+plt.xlabel('Exam 1 score')
+plt.ylabel('Exam 2 score')
+plt.legend(['Admitted', 'Not admitted'])
+
+
+
+
+plotDecisionBoundary(theta,  axes)
+
+
+
+
+
+
