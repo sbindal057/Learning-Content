@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr 21 11:14:51 2020
+
+@author: Shweta Bindal
+"""
+
+
+import numpy as np
+
+
+from matplotlib import pyplot as plt
+
+
+from scipy import optimize
+
+from scipy.io import loadmat
+
+input_layer_size  = 400
+
+# 10 labels, from 1 to 10 (note that we have mapped "0" to label 10)
+num_labels = 10
+
+#  training data stored in arrays X, y
+data = loadmat("C:/Users/Shweta Bindal/Downloads/ex3data1.mat")
+X, y = data['X'], data['y'].ravel()
+y[y == 10] = 0
+
+m = y.size
+
+rand_indices = np.random.choice(m, 100, replace=False)
+sel = X[rand_indices, :]
+
+
+import sys
+import numpy as np
+from matplotlib import pyplot
+
+sys.path.append('..')
+
+
+
+def displayData(X, example_width=None, figsize=(10, 10)):
+    """
+    Displays 2D data stored in X in a nice grid.
+    """
+    # Compute rows, cols
+    if X.ndim == 2:
+        m, n = X.shape
+    elif X.ndim == 1:
+        n = X.size
+        m = 1
+        X = X[None]  # Promote to a 2 dimensional array
+    else:
+        raise IndexError('Input X should be 1 or 2 dimensional.')
+
+    example_width = example_width or int(np.round(np.sqrt(n)))
+    example_height = n / example_width
+
+    # Compute number of items to display
+    display_rows = int(np.floor(np.sqrt(m)))
+    display_cols = int(np.ceil(m / display_rows))
+
+    fig, ax_array = pyplot.subplots(display_rows, display_cols, figsize=figsize)
+    fig.subplots_adjust(wspace=0.025, hspace=0.025)
+
+    ax_array = [ax_array] if m == 1 else ax_array.ravel()
+
+    for i, ax in enumerate(ax_array):
+        ax.imshow(X[i].reshape(example_width, example_width, order='F'),
+                  cmap='Greys', extent=[0, 1, 0, 1])
+        ax.axis('off')
+displayData(sel)
+
+
+theta_t = np.array([-2, -1, 1, 2], dtype=float)
+
+# test values for the inputs
+X_t = np.concatenate([np.ones((5, 1)), np.arange(1, 16).reshape(5, 3, order='F')/10.0], axis=1)
+
+# test values for the labels
+y_t = np.array([1, 0, 1, 0, 1])
+
+# test value for the regularization parameter
+lambda_t = 3
+def sigmoid(z):
+
+    return 1/(1+np.exp(-z))
+m, n = X.shape
+z = np.concatenate([np.ones((m, 1)), X], axis=1)
+
+
+
+def computeCost(theta,z,y,lambda_):
+    m=y.size
+    l=np.dot(z,theta)
+    k=lambda_*(np.dot(theta,theta)-theta[0]*theta[0])/2
+    for i in range(1,y.size):
+        k=k+(-y[i]*np.log(sigmoid(l)[i])-(1-y[i])*np.log(1-sigmoid(l)[i]))
+    j=k/m
+    
+    
+    d=sigmoid(l)-y
+    p=np.zeros(z.shape[1])
+    p[0]=np.dot(d,z[:,0])/m
+    for i in range(1,z.shape[1]):
+        p[i]=(np.dot(d,z[:,i])/m) +(lambda_*theta[i]/m)
+    
+    return j,p
+J, grad = computeCost(theta_t, X_t, y_t, lambda_t)
+
+print('Cost         : {:.6f}'.format(J))
+print('Expected cost: 2.534819')
+print('-----------------------')
+print('Gradients:')
+print(' [{:.6f}, {:.6f}, {:.6f}, {:.6f}]'.format(*grad))
+print('Expected gradients:')
+print(' [0.146561, -0.548558, 0.724722, 1.398003]');
